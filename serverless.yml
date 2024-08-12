@@ -1,0 +1,36 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: sohamnakhare
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: sample-event-driven-consumer
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: sample-event-driven
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - !GetAtt MyQueue.Arn
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+    environment:
+      SQS_URL:
+        Ref: MyQueue
+
+resources:
+  Resources:
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: sample-event-driven.fifo
